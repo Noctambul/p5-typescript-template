@@ -10,6 +10,12 @@ const myp5 = new p5((sketch: p5) => {
     sketch.background("#FF6347");
   };
 
+  sketch.keyPressed = function () {
+    if (sketch.keyCode == sketch.ENTER) {
+      sketch.save("screenshot.png");
+    }
+  };
+
   function w(val: number): number {
     return val ? val * sketch.width : sketch.width;
   }
