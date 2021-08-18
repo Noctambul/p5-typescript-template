@@ -1,0 +1,17 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Local serve",
+            "type":"shell",
+            "command": "yarn start",
+            "isBackground": true,
+            "presentation": {
+              "reveal": "always",
+              "panel": "dedicated",
+              "showReuseMessage": true,
+              "clear": true
+            }
+        }
+    ]
+}
