@@ -2,10 +2,36 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Local serve",
+            "label": "Start Local Serve",
             "type":"shell",
             "command": "yarn start",
             "isBackground": true,
+            "presentation": {
+              "reveal": "always",
+              "panel": "dedicated",
+              "showReuseMessage": true,
+              "clear": true
+            }
+        },
+        {
+            "label": "Build Artwork",
+            "type":"shell",
+            "command": "yarn build",
+            "isBackground": true,
+            "group": "build",
+            "presentation": {
+              "reveal": "always",
+              "panel": "dedicated",
+              "showReuseMessage": true,
+              "clear": true
+            }
+        },
+        {
+            "label": "Cleanup",
+            "type":"shell",
+            "command": "yarn cleanup",
+            "isBackground": true,
+            "group": "build",
             "presentation": {
               "reveal": "always",
               "panel": "dedicated",
