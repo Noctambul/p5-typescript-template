@@ -28,9 +28,15 @@ export default class CanvasRecorder {
     formData.append("frameId", this.currentFrameNumber.toString());
     formData.append("frameDataUrl", dataUrl);
 
-    var request = new XMLHttpRequest();
-    request.open("POST", this.serverUploadUrl);
-    request.send(formData);
+    var xhr = new XMLHttpRequest();
+    xhr.onerror = (e) => {
+      console.error(
+        `Impossible to contact the server at '${this.serverUploadUrl}', did you start it ?`
+      );
+      this.stop();
+    };
+    xhr.open("POST", this.serverUploadUrl);
+    xhr.send(formData);
   }
 
   toggle() {
