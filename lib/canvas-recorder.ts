@@ -1,47 +1,71 @@
 export default class CanvasRecorder {
-  #canvas: HTMLCanvasElement;
-  #mediaRecorder: MediaRecorder;
-  #chunks: Array<Blob>;
-  #isRunning: Boolean;
+  private canvas: HTMLCanvasElement;
+  private serverUploadUrl: string = "http://localhost:3000/upload";
+  private isRecording: boolean;
+  private currentFrameNumber: number;
+  private sessionRecordName: string;
+  private sketchName: string;
 
   get isRunning() {
-    return this.#isRunning;
+    return this.isRecording;
   }
 
-  constructor(canvas: HTMLCanvasElement) {
-    this.#canvas = canvas;
-    this.#isRunning = false;
-    this.#chunks = [];
+  constructor(canvas: HTMLCanvasElement, sketchName: string = "sketch") {
+    this.canvas = canvas;
+    this.isRecording = false;
+    this.sketchName = sketchName;
+  }
 
-    const mediaStream: MediaStream = this.#canvas.captureStream();
-    this.#mediaRecorder = new MediaRecorder(mediaStream);
+  update() {
+    if (!this.isRecording) return;
 
-    this.#mediaRecorder.ondataavailable = (e) => {
-      this.#chunks.push(e.data);
-    };
+    this.currentFrameNumber += 1;
 
-    this.#mediaRecorder.onstop = (e) => {
-      const blob = new Blob(this.#chunks, { type: "video/mp4 " });
-      this.#chunks = [];
-      const videoUrl = URL.createObjectURL(blob);
-      window.open(videoUrl);
-      // videoUrl.src
-    };
+    const dataUrl = this.canvas.toDataURL("image/png", 1);
+    const formData = new FormData();
+
+    formData.append("sessionName", this.sessionRecordName);
+    formData.append("frameId", this.currentFrameNumber.toString());
+    formData.append("frameDataUrl", dataUrl);
+
+    var request = new XMLHttpRequest();
+    request.open("POST", this.serverUploadUrl);
+    request.send(formData);
+  }
+
+  toggle() {
+    if (this.isRecording) {
+      this.stop();
+    } else {
+      this.start();
+    }
   }
 
   start() {
-    if (!this.#isRunning) {
-      console.log("[CanvasRecorder] - Start recording.");
-      this.#isRunning = true;
-      this.#mediaRecorder.start();
+    if (this.isRecording) {
+      return;
     }
+
+    this.currentFrameNumber = 0;
+    this.isRecording = true;
+    this.sessionRecordName = `${this.sketchName}-${new Date()
+      .getTime()
+      .toString()}`;
+    this.log(`START the capture for session : ${this.sessionRecordName}`);
   }
 
   stop() {
-    if (this.#isRunning) {
-      console.log("[CanvasRecorder] - Stop recording.");
-      this.#isRunning = false;
-      this.#mediaRecorder.stop();
+    if (!this.isRecording) {
+      return;
     }
+
+    // TODO: Having a get endpoint based on the sessionRecordName that return directly a gif
+
+    this.isRecording = false;
+    this.log(`STOP the capture for session : ${this.sessionRecordName}`);
+  }
+
+  private log(msg: string) {
+    console.log(msg);
   }
 }
