@@ -1,16 +1,14 @@
 {
   "name": "p5-template",
   "version": "1.0.0",
-  "main": "index.html",
   "license": "MIT",
   "author": "Noctambul",
   "dependencies": {
     "p5": "^1.3.1",
-    "parcel-bundler": "^1.12.5"
+    "parcel": "^2.0.0"
   },
   "devDependencies": {
-    "@types/p5": "^1.3.0",
-    "typescript": "^4.3.2"
+    "@types/p5": "^1.3.0"
   },
   "scripts": {
     "start": "parcel index.html",
