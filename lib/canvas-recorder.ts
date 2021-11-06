@@ -1,42 +1,37 @@
+import { io } from "socket.io-client";
+
 export default class CanvasRecorder {
   private canvas: HTMLCanvasElement;
-  private serverUploadUrl: string = "http://localhost:3000/upload";
+  private socket;
+  private serverUrl: string = "http://localhost:3000";
   private isRecording: boolean;
+  private isConnected: boolean;
   private currentFrameNumber: number;
-  private sessionRecordName: string;
-  private sketchName: string;
 
-  get isRunning() {
-    return this.isRecording;
-  }
-
-  constructor(canvas: HTMLCanvasElement, sketchName: string = "sketch") {
+  constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
-    this.isRecording = false;
-    this.sketchName = sketchName;
+
+    this.socket = io(this.serverUrl);
+    this.socket.on("connect_error", (e) => {
+      this.isRecording = false;
+      this.isConnected = false;
+      this.log(
+        `Connection error, the web server seems to not be running at '${this.serverUrl}'.`
+      );
+    });
+
+    this.socket.on("record-stopped", this.onRecordStopped.bind(this));
+
+    this.isConnected = true;
   }
 
   update() {
-    if (!this.isRecording) return;
+    if (this.isRecording && this.isConnected) {
+      this.currentFrameNumber += 1;
 
-    this.currentFrameNumber += 1;
-
-    const dataUrl = this.canvas.toDataURL("image/png", 1);
-    const formData = new FormData();
-
-    formData.append("sessionName", this.sessionRecordName);
-    formData.append("frameId", this.currentFrameNumber.toString());
-    formData.append("frameDataUrl", dataUrl);
-
-    var xhr = new XMLHttpRequest();
-    xhr.onerror = (e) => {
-      console.error(
-        `Impossible to contact the server at '${this.serverUploadUrl}', did you start it ?`
-      );
-      this.stop();
-    };
-    xhr.open("POST", this.serverUploadUrl);
-    xhr.send(formData);
+      const dataUrl = this.canvas.toDataURL("image/png", 1);
+      this.socket.emit("capture", dataUrl, this.currentFrameNumber);
+    }
   }
 
   toggle() {
@@ -48,16 +43,13 @@ export default class CanvasRecorder {
   }
 
   start() {
-    if (this.isRecording) {
+    if (this.isRecording || !this.isConnected) {
       return;
     }
 
     this.currentFrameNumber = 0;
     this.isRecording = true;
-    this.sessionRecordName = `${this.sketchName}-${new Date()
-      .getTime()
-      .toString()}`;
-    this.log(`START the capture for session : ${this.sessionRecordName}`);
+    this.log("START the capture !");
   }
 
   stop() {
@@ -65,10 +57,17 @@ export default class CanvasRecorder {
       return;
     }
 
-    // TODO: Having a get endpoint based on the sessionRecordName that return directly a gif
-
+    this.socket.emit("stop-capture");
     this.isRecording = false;
-    this.log(`STOP the capture for session : ${this.sessionRecordName}`);
+    this.log("STOP the capture !");
+  }
+
+  private onRecordStopped(opts) {
+    this.log(
+      `Stop recording with '${opts.nbFiles}' files recorded. ${
+        this.currentFrameNumber - opts.nbFiles
+      } file lost.`
+    );
   }
 
   private log(msg: string) {
