@@ -14,5 +14,6 @@
     "start": "parcel index.html",
     "cleanup": "rm -rf dist .cache",
     "build": "parcel build index.html --public-url ./"
-  }
+  },
+  "packageManager": "yarn@3.2.1"
 }
